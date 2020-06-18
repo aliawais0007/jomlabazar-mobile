@@ -1,0 +1,1 @@
+buarada tüm arayüz elemanları oluşturulacak.

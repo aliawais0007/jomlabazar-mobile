@@ -1,0 +1,55 @@
+{
+  "name": "MowShopTheme",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest",
+    "react-devtools": "react-devtools",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios"
+  },
+  "dependencies": {
+    "react": "16.6.3",
+    "react-devtools": "^3.6.3",
+    "react-native": "0.59.10",
+    "react-native-collapsible": "^1.4.0",
+    "react-native-countdown-component": "^2.6.0",
+    "react-native-datepicker": "^1.7.2",
+    "react-native-device-info": "^2.3.2",
+    "react-native-easy-toast": "^1.2.0",
+    "react-native-image-slider-box": "^1.0.12",
+    "react-native-indicators": "^0.13.0",
+    "react-native-keyboard-aware-scroll-view": "^0.8.0",
+    "react-native-localization": "^2.1.6",
+    "react-native-maps": "0.27.1",
+    "react-native-orientation": "^3.1.3",
+    "react-native-popup-dialog": "^0.17.0",
+    "react-native-responsive-screen": "^1.2.2",
+    "react-native-restart": "0.0.13",
+    "react-native-snap-carousel": "^3.8.4",
+    "react-native-star-view": "^1.1.3",
+    "react-native-status-bar-height": "^2.2.0",
+    "react-native-swiper": "^1.5.14",
+    "react-native-vector-icons": "^6.1.0",
+    "react-navigation": "^2.18.3",
+    "sync-storage": "^0.3.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.3",
+    "@babel/runtime": "^7.4.3",
+    "babel-jest": "^24.7.1",
+    "jest": "^24.7.1",
+    "jetifier": "^1.6.5",
+    "metro-react-native-babel-preset": "^0.53.1",
+    "react-test-renderer": "16.8.3"
+  },
+  "jest": {
+    "preset": "react-native"
+  },
+  "rnpm": {
+    "assets": [
+      "./src/assets/fonts"
+    ]
+  }
+}

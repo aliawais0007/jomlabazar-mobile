@@ -1,0 +1,1 @@
+Burada projedeki tüm sayfaların view olacak

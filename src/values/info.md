@@ -1,0 +1,1 @@
+Burada tüm constantlar tutulacak
