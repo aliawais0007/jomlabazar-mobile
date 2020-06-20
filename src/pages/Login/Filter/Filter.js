@@ -3,7 +3,7 @@ import {View, ScrollView} from "react-native";
 import MowContainer from "../../../components/ui/Core/Container/MowContainer";
 import MowListItem from "../../../components/ui/Common/ListItem/MowListItem";
 import MowCheckListItem from "../../../components/ui/Common/ListItem/MowCheckListItem";
-import {PopularPicks, Colors, RatingScore} from "../../../sampleData/FilterData";
+import {PopularPicks, Locations, Colors} from "../../../sampleData/FilterData";
 import {MowModal} from "../../../components/ui/Common/Modal/MowModal";
 import {MowInput} from "../../../components/ui/Common/Input/MowInput";
 import {gPadding} from "../../../values/Styles/MowStyles";
@@ -14,15 +14,26 @@ import MowCheckStarListItem from "../../../components/ui/Common/ListItem/MowChec
 import {mowColors} from "../../../values/Colors/MowColors";
 import PriceRangeData from "../../../sampleData/PriceRangeData";
 import { API_ROOT } from "../../../values/Constants/MowConstants";
+import { MowPicker } from "../../../components/ui/Common/Picker/MowPicker";
 
 export default class Filter extends React.Component {
 
     // to initialize filter data
     state = {
+        rating:"0",
+        brand:"0",
+        category:"0",
+        popularPick:"0",
+        location:"0",
+        locations: Locations,
+        locationModalVisible: false,
+        locationSelected:"",
+        locationSelectedItem: {},
+
         popularPicks: PopularPicks,
         popularPicksModalVisible: false,
-        popularPicksSelected: "",
-        popularPicksSelectedItems: [],
+        popularPicksSelected:"",
+        popularPicksSelectedItem: {},
         categories: [],
         categoryModalVisible: false,
         categorySelected: "",
@@ -35,18 +46,16 @@ export default class Filter extends React.Component {
         priceRangeModalVisible: false,
         priceRangeSelected: "",
         priceRangeSelectedItems: [],
-        colorModalVisible: false,
-        colors: Colors,
-        colorSelected: "",
-        colorSelectedItems: [],
-        bodySizeModalVisible: false,
         ratingScoreModalVisible: false,
         ratingScoreSelected: "",
         ratingScoreSelectedItems: [],
-        ratingScore: RatingScore,
+        ratingScore: [],
         startPrice: "",
         endPrice: "",
-        flag:0
+        flag:0,
+        search:"",
+
+        products:[]
     };
 
     modalView = {
@@ -69,23 +78,79 @@ export default class Filter extends React.Component {
     // did mount
     componentDidMount(){
         let flag = 0 ;
-        let page = this.props.navigation.state.params.Item;
-        if(page = "brnad"){
+        let page = this.props.navigation.state.params.item;
+        let search = this.props.navigation.state.params.search;
+        if(page.toLowerCase() === "brands"){
             flag = 1
-        }else if(page = "product"){
+        }else if(page.toLowerCase() === "products"){
             flag = 2
-        }else if(page = "supplier"){
+        }else {
             flag = 3
-        }else if(page = "buyer"){
-            flag = 4
         }
+
         this.setState({
-            flag
-        })
+            flag, search:search
+        });
 
         this.fetchCategories();
         this.fetchBrands();
+
+        let ratingScore = [{name:1, value:1, type:"rating"},{name:2, value:2, type:"rating"},{name:3, value:3, type:"rating"},{name:4, value:4, type:"rating"},{name:5, value:5, type:"rating"}];
+        this.setState({
+            ratingScore:ratingScore
+        })
         
+    }
+
+    fetchProducts = async(API) => {
+        fetch(API)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else throw response.json();
+            })
+            .then(responseJson => {
+                let products = [...responseJson.products];
+                products.map((item, index)=>{
+                    let imgs = item.imgs;
+                    let images = [];
+                    imgs.map(img =>{
+                        let root = "http://localhost/JomlahBazar/AdminPanel/pics/";
+                        let a = {image: `uri(${root}${img.path})`}
+                        images.push(a)
+                    });
+                    item['images'] = images;
+                    item['stock'] = true;
+                    item['currency'] = "$";
+                    item['new'] = false;
+                    item['discountRate'] = null;  
+                });
+                this.props.navigation.state.params.fetchResult(products);
+                this.props.navigation.navigate('ProductList');
+
+            })
+            .catch(err => {
+                this.setState({
+                    isFetched:true,err:err.message
+                })
+            }
+                )
+    }
+
+
+    _handleFilterResults=()=>{
+        let {startPrice, endPrice, category, brand, rating, popularPicks,location, search, flag, popularPick} = this.state;
+        let API =API_ROOT+ `JomlahBazar/AdminPanel/controllers/client/CON_Products.php?search=${search}&search_by=${flag}&filter_category=${category}&min_price=${startPrice}&max_price=${endPrice}&filter_brand=${brand}&filter_rank=${rating}&filter_location=${location}`;
+        if(popularPick == '1'){
+            API = API+`&fp=1`;
+        }
+        else if(popularPick == '2'){
+            API = API+`&bp=1`;
+        }
+        else API = API+`&dp=1`;
+
+        this.fetchProducts(API);
+        // this.props.navigation.navigate("ProductList")
     }
 
 // Code to fetch categories from db
@@ -98,8 +163,16 @@ export default class Filter extends React.Component {
             }else throw response.json();
         })
         .then(responseJson=>{
+            let data = [];
+            responseJson.map((item, index)=>{
+                data.push({
+                    name:item.name,
+                    value:index,
+                    type:"category"
+                })
+            })
             this.setState({
-                categories:responseJson
+                categories:data
             })
         })
         .catch(err=>{
@@ -117,8 +190,17 @@ export default class Filter extends React.Component {
         }else throw response.json();
     })
     .then(responseJson=>{
+
+        let brands =[];
+         responseJson[1].map((item , index)=>{
+            brands.push({
+                value:index,
+                name:item['brand_name'],
+                type:"brand"
+            });
+        });
         this.setState({
-            brands:responseJson
+            brands:brands
         })
     })
     .catch(err=>{
@@ -214,6 +296,35 @@ export default class Filter extends React.Component {
         return arr.indexOf(id) != -1;
     }
 
+    _onSelect(selectedItem) {
+        if(selectedItem.type === "category"){
+            this.setState({
+                category:selectedItem.value, categoryModalVisible:false
+            });
+        }
+        else if(selectedItem.type === "brand"){
+            this.setState({
+                brand:selectedItem.value, brandsModalVisible:false
+            });
+        }
+        else if(selectedItem.type === "location"){
+            this.setState({
+                location:selectedItem.value, locationModalVisible:false
+            });
+        }
+        else if(selectedItem.type === "popularpick"){
+            this.setState({
+                popularPick:selectedItem.value, popularPicksModalVisible:false
+            });
+        }
+        else{
+            this.setState({
+                rating:selectedItem.value, ratingScoreModalVisible:false
+            });
+        }      
+       
+    }
+
     render() {
 
         return(
@@ -237,6 +348,15 @@ export default class Filter extends React.Component {
                             subtitle={this.state.categorySelected}
                             onPress={() =>{this.setState({categoryModalVisible: true})}}/>
 
+                        {/* popularpicks item */}
+                        <MowListItem
+                            border={true}
+                            style={listItemStyle.container}
+                            subtitleTextStyle={listItemStyle.subtitle}
+                            title={"Popular Picks"}
+                            subtitle={this.state.popularPicksSelected}
+                            onPress={() =>{this.setState({popularPicksModalVisible: true})}}/>
+
                         {/* brands item */}
                         <MowListItem
                             border={true}
@@ -255,23 +375,6 @@ export default class Filter extends React.Component {
                             subtitle={this.state.priceRangeSelected}
                             onPress={() =>{this.setState({priceRangeModalVisible: true})}}/>
 
-                        {/* color item */}
-                        {/* <MowListItem
-                            border={true}
-                            style={listItemStyle.container}
-                            subtitleTextStyle={listItemStyle.subtitle}
-                            title={mowStrings.filter.color}
-                            subtitle={this.state.colorSelected}
-                            onPress={() =>{this.setState({colorModalVisible: true})}}/> */}
-
-                        {/* body size item */}
-                        {/* <MowListItem
-                            border={true}
-                            style={listItemStyle.container}
-                            subtitleTextStyle={listItemStyle.subtitle}
-                            title={mowStrings.filter.bodySize}
-                            subtitle={this.state.bodySizeSelected}
-                            onPress={() =>{this.setState({bodySizeModalVisible: true})}}/> */}
 
                         {/* rating score item */}
                         <MowListItem
@@ -282,108 +385,26 @@ export default class Filter extends React.Component {
                             subtitle={this.state.ratingScoreSelected}
                             onPress={() =>{this.setState({ratingScoreModalVisible: true})}}/>
 
+
+                        {/* Location item */}
+                        <MowListItem
+                            border={true}
+                            style={listItemStyle.container}
+                            subtitleTextStyle={listItemStyle.subtitle}
+                            title={"Locations"}
+                            subtitle={this.state.locationSelected}
+                            onPress={() =>{this.setState({locationModalVisible: true})}}/>
                     </ScrollView>
 
-                    {/* category modal */}
-                    <MowModal
-                        title={mowStrings.filter.category}
-                        onClosed={() =>{ this.setState({categoryModalVisible: false})}}
-                        modalVisible={this.state.categoryModalVisible}>
+            
 
-                        <View
-                            style={this.modalView.container}>
 
-                            {
-                                this.state.categories.map((value, index) =>{
 
-                                    return (
-                                        <MowCheckListItem
-                                            selected={this._checkSelected(this.state.categorySelectedItems, value["id"])}
-                                            key={index}
-                                            item={value}
-                                            titleTextStyle={this.modalView.listTitle}
-                                            subtitleTextStyle={this.modalView.listSubTitle}
-                                            title={value.name}
-                                            onPress={this._categoryCallback}/>
-                                    )
-                                })
-                            }
 
-                            {/* button view */}
-                            <View
-                                style={modalStyle.buttonView}>
 
-                                {/* apply button */}
-                                <MowButtonBasic
-                                    onPress={() => {
-                                        this._arrayToString(this.state.categorySelectedItems, "categorySelected");
-                                        this.setState({categoryModalVisible: false});
-                                    }}
-                                    stickyIcon={true}
-                                    leftIcon={"check"}
-                                    containerStyle={this.modalView.button}
-                                    type={"success"}>
 
-                                    {mowStrings.button.apply}
 
-                                </MowButtonBasic>
-
-                            </View>
-
-                        </View>
-
-                    </MowModal>
-
-                    {/* brand modal */}
-                    <MowModal
-                        title={mowStrings.filter.brand}
-                        onClosed={() =>{ this.setState({brandsModalVisible: false})}}
-                        modalVisible={this.state.brandsModalVisible}>
-
-                        <View
-                            style={this.modalView.container}>
-
-                            {
-                                this.state.brands.map((value, index) =>{
-
-                                    return (
-                                        <MowCheckListItem
-                                            selected={this._checkSelected(this.state.brandsSelectedItems, value["id"])}
-                                            titleTextStyle={this.modalView.listTitle}
-                                            subtitleTextStyle={this.modalView.listSubTitle}
-                                            key={index}
-                                            item={value}
-                                            title={value.brand_name}
-                                            onPress={this._brandCallback}/>
-                                    )
-                                })
-                            }
-
-                            {/* button view */}
-                            <View
-                                style={modalStyle.buttonView}>
-
-                                {/* apply button */}
-                                <MowButtonBasic
-                                    onPress={() => {
-                                        this._arrayToString(this.state.brandsSelectedItems, "brandsSelected");
-                                        this.setState({brandsModalVisible: false});
-                                    }}
-                                    containerStyle={this.modalView.button}
-                                    stickyIcon={true}
-                                    leftIcon={"check"}
-                                    type={"success"}>
-
-                                    {mowStrings.button.apply}
-
-                                </MowButtonBasic>
-
-                            </View>
-
-                        </View>
-
-                    </MowModal>
-
+            
                     {/* price range modal */}
                     <MowModal
                         title={mowStrings.filter.priceRange}
@@ -412,22 +433,7 @@ export default class Filter extends React.Component {
 
                             </View>
 
-                            {
-                                this.state.priceRange.map((value, index) =>{
-
-                                    return (
-                                        <MowCheckListItem
-                                            style={{marginHorizontal: 0}}
-                                            selected={this._checkSelected(this.state.priceRangeSelectedItems, value["id"])}
-                                            key={index}
-                                            item={value}
-                                            title={value.title}
-                                            titleTextStyle={this.modalView.listTitle}
-                                            subtitleTextStyle={this.modalView.listSubTitle}
-                                            onPress={this._priceRangeCallback}/>
-                                    )
-                                })
-                            }
+                         
 
                             {/* button view */}
                             <View
@@ -455,56 +461,7 @@ export default class Filter extends React.Component {
                     </MowModal>
 
                   
-                    {/* rating score modal */}
-                    <MowModal
-                        title={mowStrings.filter.ratingScore}
-                        onClosed={() =>{ this.setState({ratingScoreModalVisible: false})}}
-                        modalVisible={this.state.ratingScoreModalVisible}>
-
-                        <View
-                            style={this.modalView.container}>
-
-                            {
-                                this.state.ratingScore.map((value, index) =>{
-
-                                    return ( 
-                                        <MowCheckStarListItem
-                                            score={value["title"]}
-                                            selected={this._checkSelected(this.state.ratingScoreSelectedItems, value["id"])}
-                                            key={index} 
-                                            titleTextStyle={this.modalView.listTitle}
-                                            subtitleTextStyle={this.modalView.listSubTitle}
-                                            item={value}
-                                            onPress={this._ratingScoreCallback}/>
-                                    )
-                                })
-                            }
-
-                            {/* button view */}
-                            <View
-                                style={modalStyle.buttonView}>
-
-                                {/* apply button */}
-                                <MowButtonBasic
-                                    onPress={() => {
-                                        this._arrayToString(this.state.ratingScoreSelectedItems, "ratingScoreSelected");
-                                        this.setState({ratingScoreModalVisible: false});
-                                    }}
-                                    containerStyle={this.modalView.button}
-                                    stickyIcon={true}
-                                    leftIcon={"check"}
-                                    type={"success"}>
-
-                                    {mowStrings.button.apply}
-
-                                </MowButtonBasic>
-
-                            </View>
-
-                        </View>
-
-                    </MowModal>
-
+                  
                 </View>
 
                 {/* button view */}
@@ -513,7 +470,7 @@ export default class Filter extends React.Component {
 
                     {/* apply button */}
                     <MowButtonBasic
-                        onPress={() => {this.props.navigation.navigate("ProductList")}} // send here filter data, then request server with filter data for filtered products
+                        onPress={() => this._handleFilterResults()} // send here filter data, then request server with filter data for filtered products
                         stickyIcon={true}
                         containerStyle={{backgroundColor: mowColors.mainColor}}
                         leftIcon={"check"}
@@ -525,6 +482,67 @@ export default class Filter extends React.Component {
 
                 </View>
 
+                
+                {/* picker for locations */}
+                <MowPicker
+                    key={2}
+                    pickerTitle={"Select Location"}
+                    selectedValue={this.state.locationSelected}
+                    onSelect={(obj) => { this._onSelect(obj) }}
+                    title={mowStrings.picker.sort.title}
+                    search={false}
+                    modalVisible={this.state.locationModalVisible}
+                    onClosed={() => { this.setState({ locationModalVisible: false }) }}
+                    data={Locations} />
+
+
+                {/* picker for categories */}
+                <MowPicker
+                    key={2}
+                    pickerTitle={"Select Categories"}
+                    selectedValue={this.state.categorySelected}
+                    onSelect={(obj) => { this._onSelect(obj) }}
+                    title={mowStrings.picker.sort.title}
+                    search={false}
+                    modalVisible={this.state.categoryModalVisible}
+                    onClosed={() => { this.setState({ categoryModalVisible: false }) }}
+                    data={this.state.categories} />
+
+                     {/* picker for Brands */}
+                <MowPicker
+                    key={2}
+                    pickerTitle={"Select Brands"}
+                    selectedValue={this.state.brandsSelected}
+                    onSelect={(obj) => { this._onSelect(obj) }}
+                    title={mowStrings.picker.sort.title}
+                    search={false}
+                    modalVisible={this.state.brandsModalVisible}
+                    onClosed={() => { this.setState({ brandsModalVisible: false }) }}
+                    data={this.state.brands} />
+
+                        {/* picker for PopularPick */}
+                <MowPicker
+                    key={2}
+                    pickerTitle={"Popular Picks"}
+                    selectedValue={this.state.popularPicksSelected}
+                    onSelect={(obj) => { this._onSelect(obj) }}
+                    title={mowStrings.picker.sort.title}
+                    search={false}
+                    modalVisible={this.state.popularPicksModalVisible}
+                    onClosed={() => { this.setState({ popularPicksModalVisible: false }) }}
+                    data={PopularPicks} />
+
+                {/* picker for Rating */}
+                <MowPicker
+                    key={2}
+                    pickerTitle={"Slect Rating"}
+                    selectedValue={this.state.ratingScoreSelected}
+                    onSelect={(obj) => { this._onSelect(obj) }}
+                    title={mowStrings.picker.sort.title}
+                    search={false}
+                    modalVisible={this.state.ratingScoreModalVisible}
+                    onClosed={() => { this.setState({ ratingScoreModalVisible: false }) }}
+                    data={this.state.ratingScore} />
             </MowContainer>
 
         )

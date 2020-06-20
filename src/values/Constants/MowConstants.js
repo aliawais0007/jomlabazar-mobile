@@ -8,4 +8,5 @@ export const deviceHeight = Dimensions.get('window').height;
 export const platform = Platform.OS;
 export const statusBarHeight = getStatusBarHeight();
 export const navbarHeight = hp("6%");
-export const API_ROOT = "http://192.168.168.61/";
+// export const API_ROOT = "http://192.168.168.61/";
+export const API_ROOT = "http://192.168.0.151/";

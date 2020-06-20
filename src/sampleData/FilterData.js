@@ -29,23 +29,6 @@ const FilterData = [
 
 ];
 
-const PolularPicks = [
-
-    {
-        id: 1,
-        title: "Featured Products",
-    },
-    {
-        id: 2,
-        title: "Best Sellers",
-    },
-    {
-        id: 3,
-        title: "Discount",
-    }
-
-];
-
 const Brands = [
 
     {
@@ -151,4 +134,21 @@ const RatingScore = [
 
 ];
 
-export {FilterData, Brands, PolularPicks, BodySize, Colors, RatingScore};
+
+const PopularPicks = [
+    {value:1, name:"Featured Products", type:"popularpick"}, 
+    {value:2, name:"Best Sellers", type:"popularpick"}, 
+    {value:3, name:"Discounted", type:"popularpick"}
+];
+
+const Locations = [
+    {value:1, name:"Dubai", type:"location"}, 
+    {value:2, name:"Abu Dhabi", type:"location"}, 
+    {value:3, name:"Ajman", type:"location"}, 
+    {value:4, name:"Fujairah", type:"location"}, 
+    {value:5, name:"Ras al Khaima", type:"location"}, 
+    {value:6, name:"Sharjah", type:"location"}, 
+    {value:7, name:"Umm al Quawain", type:"location"}
+];
+
+export {FilterData, Brands, PopularPicks, Locations, BodySize, Colors, RatingScore};

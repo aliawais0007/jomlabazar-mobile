@@ -22,11 +22,11 @@ const searchTypes = [
         image: require("../assets/icon/ic_buyer.png"),
         value:4
     },
-    {
-        title: "Location",
-        image: require("../assets/icon/ic_location2.png"),
-        value:5
-    }
+    // {
+    //     title: "Location",
+    //     image: require("../assets/icon/ic_location2.png"),
+    //     value:5
+    // }
 
 ];
 

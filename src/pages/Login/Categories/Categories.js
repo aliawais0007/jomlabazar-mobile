@@ -3,19 +3,43 @@ import {FlatList, View, Text, Image, TouchableOpacity} from "react-native";
 import {mowStrings} from "../../../values/Strings/MowStrings";
 import {mowColors} from "../../../values/Colors/MowColors";
 import MowContainer from "../../../components/ui/Core/Container/MowContainer";
-import CategoriesData from "../../../sampleData/CategoriesData";
+// import CategoriesData from "../../../sampleData/CategoriesData";
 import MowListItem from "../../../components/ui/Common/ListItem/MowListItem";
-import {pageContainerStyle} from "../../../values/Styles/MowStyles";
+import {pageContainerStyle, fontFamily} from "../../../values/Styles/MowStyles";
 import {heightPercentageToDP as hp} from "react-native-responsive-screen";
 import SyncStorage from "sync-storage";
+import { API_ROOT } from "../../../values/Constants/MowConstants";
+import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 export default class Categories extends React.Component {
 
     state = {
-        category: null
+        category: null,
+        categories:[]
     };
 
+
+    fetchCategories =async()=> {
+        const API = API_ROOT+"JomlahBazar/AdminPanel/controllers/client/CON_Categories.php";
+        fetch(API)
+        .then(response=>{
+            if(response.ok){
+                return response.json();
+            }else throw response.json();
+        })
+        .then(responseJson=>{
+            this.setState({
+                categories:responseJson
+            })
+        })
+        .catch(err=>{
+            alert(err)
+        })
+    }
+
+
     componentDidMount() {
+        this.fetchCategories();
         this.props.navigation.addListener("willFocus", () => {
             // to get category value that selected from settings
             let category = SyncStorage.get("category");
@@ -25,18 +49,80 @@ export default class Categories extends React.Component {
             }
             else {
                 // to set category value
-                this.setState({category: category});
+                this.setState({categories: category});
             }
         })
     }
 
     render() {
-
+        const {categories} = this.state;
         return(
 
             <MowContainer
                 footerActiveIndex={2}
-                title={mowStrings.categories.title}>
+                title={mowStrings.categories.title}
+                navbar={false}
+                statusbar={false}
+                >
+
+
+<View
+                    style={{
+                        height: hp("6%"),
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: 'row',
+                        zIndex: 999,
+                        backgroundColor: mowColors.mainColor,
+                    }}>
+
+                    {/* back button */}
+                    <TouchableOpacity
+                        onPress={() => this.props.navigation.goBack(null)}
+                        style={{
+                            flex: 1.5,
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            paddingVertical: 5,
+                        }}>
+
+                        <FAIcon
+                            style={{ fontSize: hp("4%") }}
+                            color={"white"}
+                            name={'angle-left'} />
+
+                    </TouchableOpacity>
+
+                    {/* page title */}
+                    <Text
+                        style={{
+                            flex: 7,
+                            fontSize: hp("2%"),
+                            fontWeight: 'bold',
+                            color: 'white',
+                            textAlign: 'center',
+                            fontFamily: fontFamily.bold
+                        }}>
+
+                        {"Categories"}
+
+                    </Text>
+
+                    {/* user button */}
+                    <TouchableOpacity
+                        onPress={() => { this.props.navigation.openDrawer() }}
+                        style={{ flex: 1.5, alignItems: "center" }}>
+
+                        <FAIcon
+                            style={{ fontSize: hp("3%") }}
+                            color={"white"}
+                            name={'bars'} />
+
+                    </TouchableOpacity>
+
+                </View>
+
 
                 {/* category list */}
                 {
@@ -45,16 +131,16 @@ export default class Categories extends React.Component {
                         <FlatList
                             showsVerticalScrollIndicator={false}
                             keyExtractor={(item, index) => index.toString()}
-                            data={CategoriesData}
+                            data={categories}
                             style={[pageContainerStyle]}
                             renderItem={({ item, index }) => (
                                 // category item
                                 <MowListItem
                                     key={index}
                                     style={{marginVertical: 5, borderRadius: 5}}
-                                    onPress={() => {this.props.navigation.navigate("ProductList",{item:item["title"]})}}
+                                    onPress={() => {this.props.navigation.navigate("ProductList",{item:"Products"})}}
                                     imagePath={item["image"]}
-                                    title={item["title"]}/>
+                                    title={item['name']}/>
 
                             )}
                         />

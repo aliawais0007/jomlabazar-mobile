@@ -220,7 +220,7 @@ export default class HomeScreen extends React.Component {
 if(item['title'].toLowerCase()==='location'){
   this.props.navigation.navigate("Location", {item:item["title"], search_by:item['title']});
 }
-else this.props.navigation.navigate("SearchType", {item:item["title"], search_by:item['title']});
+else this.props.navigation.navigate("ProductList", {item:item["title"], search_by:item['title']});
   }
   render() {
     return (
@@ -383,7 +383,7 @@ else this.props.navigation.navigate("SearchType", {item:item["title"], search_by
                   style={{
                     backgroundColor: "white",
                     borderRadius: 10,
-                    width: hp("10%"),
+                    width: hp("12%"),
                     height: hp("10%"),
                     marginRight: 0,
                     justifyContent: "center",
@@ -393,7 +393,7 @@ else this.props.navigation.navigate("SearchType", {item:item["title"], search_by
                 >
                   {/* category image */}
                   <Image
-                    style={{ width: hp("7%"), height: hp("6%") }}
+                    style={{ width: hp("9%"), height: hp("6%") }}
                     source={item["image"]}
                     resizeMode={"contain"}
                   />

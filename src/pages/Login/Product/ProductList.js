@@ -115,6 +115,7 @@ export default class ProductList extends React.Component {
         }
 
         else API = API + `&search=`
+        alert(API);
         fetch(API)
             .then(response => {
                 if (response.ok) {
@@ -122,9 +123,28 @@ export default class ProductList extends React.Component {
                 } else throw response.json();
             })
             .then(responseJson => {
-                    this.fetchImages(responseJson);
+                let products = [...responseJson.products];
+                products.map((item, index)=>{
+                    let imgs = item.imgs;
+                    let images = [];
+                    imgs.map(img =>{
+                        let root = "http://localhost/JomlahBazar/AdminPanel/pics/";
+                        let a = {image: `uri(${root}${img.path})`}
+                        images.push(a)
+                    });
+                    item['images'] = images;
+                    item['stock'] = true;
+                    item['currency'] = "$";
+                    item['new'] = false;
+                    item['discountRate'] = null;  
+                });
+                this.setState({
+                    ProductList:products, isFetched:true, productLength:products.length
+                })
+                 
             })
             .catch(err => {
+                alert(err)
                 this.setState({
                     isFetched:true,err:err.message
                 })
@@ -136,11 +156,7 @@ export default class ProductList extends React.Component {
         for(let i=0; i<responseJson.length; i++){       
             let images=[];
             let Image_root="";
-            responseJson[i]['images'] = WomanClothing[i].images;
-            responseJson[i]['stock'] = true;
-            responseJson[i]['currency'] = "$";
-            responseJson[i]['new'] = false;
-            responseJson[i]['discountRate'] = null;   
+         
             await fetch(API_ROOT+`JomlahBazar/AdminPanel/controllers/client/CON_ProductImage.php?productId=${responseJson[i].productId}`)
             .then(imgResposne=>{if(response.ok){
                 return imgResposne.json();
@@ -590,8 +606,9 @@ export default class ProductList extends React.Component {
 
 
     fetchResults=(items)=>{
+        alert(items.length)
         this.setState({
-            items
+            ProductList:items, productLength:items.length
         })
     }
 
@@ -733,7 +750,7 @@ export default class ProductList extends React.Component {
                     {/* filter view */}
                     <TouchableOpacity
                         style={{ flexDirection: "row", flex: 5, alignItems: "center", justifyContent: "center" }}
-                        onPress={() => { this.props.navigation.navigate("Filter", {fetchResult:this.fetchResults, item:Title})}}>
+                        onPress={() => { this.props.navigation.navigate("Filter", {fetchResult:this.fetchResults, item:Title, search:this.state.searchText})}}>
 
                         {/* order icon */}
                         <FAIcon
@@ -1385,6 +1402,8 @@ export default class ProductList extends React.Component {
                     modalVisible={this.state.pickerVisible}
                     onClosed={() => { this.setState({ pickerVisible: false }) }}
                     data={pickerSortData} />
+
+                    
 
             </MowContainer>
 

@@ -86,6 +86,7 @@ const StackNavigator = createStackNavigator({
         CategoryDetail: {screen: CategoryDetail},
         ProductList: {screen: ProductList},
         SearchType: {screen: SearchType},
+        Filter: {screen: Filter},
         Location: {screen: Location},
         ProductDetail: {screen: ProductDetail},
         Cart: {screen: Cart},

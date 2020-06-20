@@ -117,7 +117,7 @@ export class MowPicker extends React.Component {
                             fontFamily: fontFamily.regular,
                         }}>
 
-                        {item[this.state.textKey]}
+                        {item["name"]}
 
                     </Text>
 
