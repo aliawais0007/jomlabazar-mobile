@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "16.6.3",
     "react-devtools": "^3.6.3",
-    "react-native": "0.59.10",
+    "react-native": "0.62.3",
     "react-native-collapsible": "^1.4.0",
     "react-native-countdown-component": "^2.6.0",
     "react-native-datepicker": "^1.7.2",
